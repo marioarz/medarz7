@@ -1,0 +1,27 @@
+# This is a basic workflow to help you get started with Actions
+# Example workflow
+# .github/workflows/example.yml
+
+name: 'example oidc'
+on:
+  push:
+    branches:
+    - 'main'
+jobs:
+  run:
+    name: 'example to list bucket contents'
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: 'ubuntu-latest'
+    steps:
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        token_format: 'access_token'
+        workload_identity_provider: "projects/444422131050/locations/global/workloadIdentityPools/example-pool/providers/example-gh-provider" # this is the output provider_name from the TF module
+        service_account: "test-storage-sa@gcc-federated-github.iam.gserviceaccount.com" # this is a SA email configured using the TF module with access to YOUR-GCS-BUCKET
+    - id: 'list-buckets-contents'
+      run: |-
+        curl -sSf https://storage.googleapis.com/storage/v1/b/gcc-test-100/o \
+          --header "Authorization: Bearer ${{ steps.auth.outputs.access_token }}"
